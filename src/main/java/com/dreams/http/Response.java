@@ -1,6 +1,5 @@
-package com.dreams;
+package com.dreams.http;
 
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;

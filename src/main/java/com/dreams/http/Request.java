@@ -1,4 +1,4 @@
-package com.dreams;
+package com.dreams.http;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletInputStream;

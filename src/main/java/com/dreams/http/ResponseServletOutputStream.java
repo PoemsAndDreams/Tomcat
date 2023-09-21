@@ -1,4 +1,4 @@
-package com.dreams;
+package com.dreams.http;
 
 import javax.servlet.ServletOutputStream;
 import java.io.IOException;

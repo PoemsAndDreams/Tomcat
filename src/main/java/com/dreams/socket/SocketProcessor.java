@@ -1,6 +1,8 @@
-package com.dreams;
+package com.dreams.socket;
 
-import javax.servlet.ServletException;
+import com.dreams.http.Request;
+import com.dreams.http.Response;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
@@ -40,12 +42,15 @@ public class SocketProcessor implements Runnable{
             System.out.println(" " + method + " " + url + " " + protocl);
             Request request = new Request(method, url, protocl,socket);
             Response response = new Response(request);
-            Servlet servlet = new Servlet();
-            servlet.service(request,response);
+
+//            Servlet servlet = new Servlet();
+//            servlet.service(request,response);
+
+
             //发送响应
             response.send();
 
-        } catch (IOException | ServletException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
