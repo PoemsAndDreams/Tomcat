@@ -1,8 +1,10 @@
 package com.dreams;
 
 import com.dreams.ClassLoader.WebaddsClassLoader;
+import com.dreams.common.Context;
 import com.dreams.socket.SocketProcessor;
 
+import javax.servlet.Servlet;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import java.io.File;
@@ -12,11 +14,15 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Tomcat {
+
+    private Map<String,Context> contextMap = new HashMap<>();
 
     public void start(){
         try {
@@ -28,7 +34,7 @@ public class Tomcat {
                 //得到socket连接
                 Socket socket = serverSocket.accept();
                 //交给线程池中的线程处理
-                executorService.execute(new SocketProcessor(socket));
+                executorService.execute(new SocketProcessor(socket,this));
             }
 
         } catch (IOException e) {
@@ -65,6 +71,9 @@ public class Tomcat {
     private void deploy(File webapps, String appName) {
         //查看有哪些servlet
 
+        //每个应用对应一个context对象
+        Context context = new Context(appName);
+
         //获得appName文件夹
         File appDirectory = new File(webapps, appName);
         //获得classes文件夹
@@ -98,6 +107,10 @@ public class Tomcat {
                         //获取WebServlet参数urlPatterns内容
                         String[] urlPatterns = annotation.urlPatterns();
 
+                        //这里保存在common下的context,一个应用保存在一个Map
+                        for (String urlPattern : urlPatterns) {
+                            context.addUrlurlPatternMap(urlPattern, (Servlet) servletClass.newInstance());
+                        }
 
                     }
                 }
@@ -107,12 +120,23 @@ public class Tomcat {
                 throw new RuntimeException(e);
             } catch (MalformedURLException e) {
                 throw new RuntimeException(e);
+            } catch (InstantiationException e) {
+                throw new RuntimeException(e);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
             }
 
 
         }
 
+        contextMap.put(appName,context);
 
+    }
+
+
+    //获取tomcat也会保存有哪些应用
+    public Map<String, Context> getContextMap() {
+        return contextMap;
     }
 
     //递归调用获取所有目录

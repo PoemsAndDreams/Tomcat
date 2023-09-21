@@ -1,8 +1,14 @@
 package com.dreams.socket;
 
+import com.dreams.Tomcat;
+import com.dreams.common.Context;
 import com.dreams.http.Request;
 import com.dreams.http.Response;
+import com.dreams.servlet.DefaultServlet;
+import com.dreams.servlet.NotFindServlet;
 
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
@@ -11,9 +17,11 @@ import java.net.Socket;
 public class SocketProcessor implements Runnable{
 
     private Socket socket;
+    private Tomcat tomcat;
 
-    public SocketProcessor(Socket socket) {
+    public SocketProcessor(Socket socket,Tomcat tomcat) {
         this.socket = socket;
+        this.tomcat = tomcat;
     }
 
     @Override
@@ -37,20 +45,47 @@ public class SocketProcessor implements Runnable{
             index2 = re.indexOf(' ',index1+1);
             index3 = re.indexOf('\r');
             String method = re.substring(0,index1);
-            String url = re.substring(index1,index2);
+            String url = re.substring(index1 + 1,index2);
             String protocl = re.substring(index2,index3);
             System.out.println(" " + method + " " + url + " " + protocl);
             Request request = new Request(method, url, protocl,socket);
             Response response = new Response(request);
 
-//            Servlet servlet = new Servlet();
-//            servlet.service(request,response);
+            //拆分/Text/text......如/应用名/servlet路径名
+            String requestURI = request.getUrl().toString();
+            requestURI = requestURI.substring(1);
+            String[] paths = requestURI.split("/");
+            //应用名
+            String appName = paths[0];
+            //获取到tomcat保存的servlet
+            Context context = tomcat.getContextMap().get(appName);
+            if (context != null){
+                //servlet路径名
+                String servletName = paths[1];
+                //根据名字获取到servlet
+                Servlet servlet = context.getUrlurlPattern(servletName);
+                if (servlet != null){
+                    //得到servlet对象，
+                    servlet.service(request,response);
+                    //发送响应
+                    response.send();
+                }
+                else {
+                    System.out.println("Not Find Path!");
+                    NotFindServlet notFindServlet = new NotFindServlet();
+                    notFindServlet.service(request,response);
+                    //发送响应
+                    response.send();
+
+                }
+
+            }
 
 
-            //发送响应
-            response.send();
 
         } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (ServletException e) {
             throw new RuntimeException(e);
         }
 
