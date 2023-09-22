@@ -13,6 +13,12 @@ public class ResponseServletOutputStream extends ServletOutputStream {
         index++;
     }
 
+    @Override
+    public void write(byte[] b) throws IOException {
+        bytes = new byte[b.length];
+        bytes = b;
+    }
+
     public byte[] getBytes() {
         return bytes;
     }
